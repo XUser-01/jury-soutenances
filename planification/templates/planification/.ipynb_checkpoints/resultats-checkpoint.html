@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Résultats de soutenance</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef2f7; min-height: 100vh; padding: 40px 20px; }
+        .container { max-width: 650px; margin: 0 auto; }
+        h1 { color: #1a2942; font-size: 1.8em; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .btn-retour { display: inline-flex; align-items: center; gap: 6px; background: #3498db; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.9em; margin-bottom: 25px; transition: background 0.2s; }
+        .btn-retour:hover { background: #2980b9; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 20px; }
+        .card-title { font-size: 1.3em; font-weight: 700; color: #1a2942; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eef2f7; }
+        .info-row { display: flex; gap: 8px; margin-bottom: 8px; color: #555; font-size: 0.95em; }
+        .info-label { font-weight: 600; color: #1a2942; min-width: 80px; }
+        label { display: block; font-weight: 600; color: #1a2942; margin-bottom: 6px; margin-top: 18px; font-size: 0.95em; }
+        input[type="number"], select, textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #d0dae8; border-radius: 8px; font-size: 0.95em; color: #1a2942; transition: border 0.2s; background: #f8fafd; }
+        input[type="number"]:focus, select:focus, textarea:focus { outline: none; border-color: #3498db; background: white; }
+        textarea { resize: vertical; min-height: 90px; }
+        .jury-section { margin-top: 20px; }
+        .jury-section h3 { font-size: 1em; font-weight: 700; color: #1a2942; margin-bottom: 12px; }
+        .jury-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; background: #f8fafd; margin-bottom: 8px; border: 1.5px solid #e8eef5; }
+        .jury-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #3498db; cursor: pointer; }
+        .jury-item label { margin: 0; font-weight: 500; color: #333; font-size: 0.95em; cursor: pointer; }
+        .btn-submit { width: 100%; padding: 13px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; margin-top: 25px; transition: background 0.2s; }
+        .btn-submit:hover { background: #219a52; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Résultats de soutenance</h1>
+        <a href="{% url 'planning' soutenance.memoire.session_id %}" class="btn-retour">← Retour au planning</a>
+
+        <div class="card">
+            <div class="card-title">{{ soutenance.memoire.titre }}</div>
+            <div class="info-row"><span class="info-label">Étudiant</span> {{ soutenance.memoire.etudiant.prenom }} {{ soutenance.memoire.etudiant.nom }}</div>
+            <div class="info-row"><span class="info-label">Date</span> {{ soutenance.jour }}</div>
+            <div class="info-row"><span class="info-label">Heure</span> {{ soutenance.heure_debut }}</div>
+            <div class="info-row"><span class="info-label">Salle</span> {{ soutenance.salle.nom }}</div>
+        </div>
+
+        <div class="card">
+            <form method="post">
+                {% csrf_token %}
+
+                <label for="note">Note (/20)</label>
+                <input type="number" id="note" name="note" min="0" max="20" step="0.25" placeholder="Ex: 14.5" required>
+
+                <label for="decision">Décision</label>
+                <select id="decision" name="decision" required>
+                    <option value="">-- Choisir --</option>
+                    <option value="admis">✅ Admis</option>
+                    <option value="corrections">📝 Admis avec corrections</option>
+                    <option value="ajourne">❌ Ajourné</option>
+                </select>
+
+                <label for="observations">Observations</label>
+                <textarea id="observations" name="observations" placeholder="Remarques du jury..."></textarea>
+
+                <div class="jury-section">
+                    <h3>Présence des membres du jury</h3>
+                    {% for jury in jurys %}
+                    <div class="jury-item">
+                        <input type="checkbox" name="present_{{ jury.id }}" id="jury_{{ jury.id }}" checked>
+                        <label for="jury_{{ jury.id }}">{{ jury.enseignant.prenom }} {{ jury.enseignant.nom }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn-submit">✅ Enregistrer les résultats</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

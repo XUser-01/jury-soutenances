@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des Jurys de Soutenances</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; background: #f5f5f5; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        .session-card { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
+        .btn:hover { background: #2980b9; }
+        .btn-green { background: #27ae60; }
+        .btn-green:hover { background: #219a52; }
+    </style>
+</head>
+<body>
+    <h1>🎓 Gestion des Jurys de Soutenances</h1>
+    {% if is_admin %}
+<a href="/admin/" class="btn" style="background:#8e44ad;">⚙️ Interface Admin</a>
+{% endif %}
+    {% if sessions %}
+        {% for session in sessions %}
+        <div class="session-card">
+            <h2>{{ session.libelle }}</h2>
+            <p>📅 Du {{ session.date_debut }} au {{ session.date_fin }}</p>
+            <p>Statut : <strong>{{ session.statut }}</strong></p>
+            
+            {% if is_admin %}
+<a href="{% url 'lancer_planning' session.id %}" class="btn btn-green">⚡ Générer le planning</a>
+{% endif %}
+<a href="{% url 'planning' session.id %}" class="btn">📋 Voir le planning</a>        </div>
+        {% endfor %}
+    {% else %}
+        <p>Aucune session disponible.</p>
+    {% endif %}
+</body>
+</html>
