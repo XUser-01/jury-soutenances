@@ -1,12 +1,12 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from .models import Session, Enseignant, Etudiant, Salle, Memoire, Disponibilite, Soutenance, Jury
 
 from django.contrib.admin import AdminSite
 
 # Personnalisation de l'admin
-admin.site.site_header = "Gestion des Jurys de Soutenances - ESI"
-admin.site.site_title = "Administration ESI"
-admin.site.index_title = "Tableau de bord"
+admin.site.site_header = "JuryPilot Administration"
+admin.site.site_title = "JuryPilot"
+admin.site.index_title = "Centre de gestion"
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):

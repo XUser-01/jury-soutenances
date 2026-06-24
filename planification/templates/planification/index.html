@@ -1,37 +1,62 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestion des Jurys de Soutenances</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; background: #f5f5f5; }
-        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-        .session-card { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
-        .btn:hover { background: #2980b9; }
-        .btn-green { background: #27ae60; }
-        .btn-green:hover { background: #219a52; }
-    </style>
-</head>
-<body>
-    <h1>🎓 Gestion des Jurys de Soutenances</h1>
-    {% if is_admin %}
-<a href="/admin/" class="btn" style="background:#8e44ad;">⚙️ Interface Admin</a>
-{% endif %}
+﻿{% extends 'planification/base.html' %}
+
+{% block title %}Tableau de bord - JuryPilot{% endblock %}
+{% block eyebrow %}Vue generale{% endblock %}
+{% block page_title %}Tableau de bord des soutenances{% endblock %}
+{% block subtitle %}Pilotez les sessions, la generation des plannings et le suivi des resultats depuis un seul espace.{% endblock %}
+
+{% block content %}
+<section class="grid stats">
+    <div class="stat"><span>Sessions</span><strong>{{ stats.sessions }}</strong></div>
+    <div class="stat"><span>Memoires</span><strong>{{ stats.memoires }}</strong></div>
+    <div class="stat"><span>Enseignants</span><strong>{{ stats.enseignants }}</strong></div>
+    <div class="stat"><span>Soutenances terminees</span><strong>{{ stats.terminees }}</strong></div>
+</section>
+
+<section class="panel">
+    <div class="toolbar">
+        <div>
+            <h2 style="margin:0; font-size:1.25rem;">Sessions academiques</h2>
+            <p class="subtitle">Chaque session affiche son avancement et ses actions principales.</p>
+        </div>
+        {% if is_admin %}
+        <a href="/admin/" class="btn secondary">Ouvrir l'administration</a>
+        {% endif %}
+    </div>
+
     {% if sessions %}
+    <div class="grid session-grid">
         {% for session in sessions %}
-        <div class="session-card">
-            <h2>{{ session.libelle }}</h2>
-            <p>📅 Du {{ session.date_debut }} au {{ session.date_fin }}</p>
-            <p>Statut : <strong>{{ session.statut }}</strong></p>
-            
-            {% if is_admin %}
-<a href="{% url 'lancer_planning' session.id %}" class="btn btn-green">⚡ Générer le planning</a>
-{% endif %}
-<a href="{% url 'planning' session.id %}" class="btn">📋 Voir le planning</a>        </div>
+        <article class="card">
+            <div>
+                <h2>{{ session.libelle }}</h2>
+                <div class="meta">
+                    <span>Du {{ session.date_debut|date:"d/m/Y" }} au {{ session.date_fin|date:"d/m/Y" }}</span>
+                    <span class="badge {% if session.statut == 'ouverte' %}ok{% else %}bad{% endif %}">{{ session.get_statut_display }}</span>
+                </div>
+            </div>
+
+            <div class="grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); gap:10px;">
+                <div class="badge">{{ session.total_memoires }} memoires</div>
+                <div class="badge warn">{{ session.total_soutenances }} planifiees</div>
+                <div class="badge ok">{{ session.terminees }} terminees</div>
+            </div>
+
+            <div class="actions">
+                <a href="{% url 'planning' session.id %}" class="btn">Voir le planning</a>
+                {% if is_admin %}
+                <form method="post" action="{% url 'lancer_planning' session.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn success">Generer</button>
+                </form>
+                <a href="{% url 'exporter_planning' session.id %}" class="btn secondary">Exporter CSV</a>
+                {% endif %}
+            </div>
+        </article>
         {% endfor %}
+    </div>
     {% else %}
-        <p>Aucune session disponible.</p>
+    <div class="empty">Aucune session disponible pour le moment.</div>
     {% endif %}
-</body>
-</html>
+</section>
+{% endblock %}

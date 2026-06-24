@@ -1,105 +1,128 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Planning des Soutenances</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 50px auto; background: #f5f5f5; }
-        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-        .btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th { background: #2c3e50; color: white; padding: 15px; text-align: left; }
-        td { padding: 12px 15px; border-bottom: 1px solid #ecf0f1; vertical-align: middle; }
-        tr:hover { background: #f8f9fa; }
-        .jury-list { margin: 0; padding: 0; list-style: none; }
-        .jury-list li { display: inline-block; background: #3498db; color: white; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 0.85em; }
-        .empty { text-align: center; padding: 40px; color: #7f8c8d; }
-        .statut-planifiee { color: #f39c12; font-weight: bold; }
-        .statut-validee { color: #27ae60; font-weight: bold; }
-        .statut-rejetee { color: #e74c3c; font-weight: bold; }
-        .statut-terminee { color: #8e44ad; font-weight: bold; }
-        .btn-valider { display: inline-block; background: #27ae60; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; margin-right: 5px; margin-bottom: 4px; }
-        .btn-rejeter { display: inline-block; background: #e74c3c; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; margin-bottom: 4px; }
-        .btn-valider:hover { background: #219a52; }
-        .btn-rejeter:hover { background: #c0392b; }
-        .note { font-weight: bold; color: #2c3e50; }
-        .decision-admis { color: #27ae60; font-weight: bold; }
-        .decision-corrections { color: #f39c12; font-weight: bold; }
-        .decision-ajourne { color: #e74c3c; font-weight: bold; }
-        .alert-success { padding: 12px 20px; margin-bottom: 20px; border-radius: 8px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-warning { padding: 12px 20px; margin-bottom: 20px; border-radius: 8px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-    </style>
-</head>
-<body>
-    <h1>📋 Planning des Soutenances</h1>
-    <a href="{% url 'index' %}" class="btn">← Retour</a>
+﻿{% extends 'planification/base.html' %}
 
-    {% if message %}
-        {% if '✅' in message %}
-        <div class="alert-success">{{ message }}</div>
-        {% else %}
-        <div class="alert-warning">{{ message }}</div>
-        {% endif %}
-    {% endif %}
+{% block title %}Planning - JuryPilot{% endblock %}
+{% block eyebrow %}Session{% endblock %}
+{% block page_title %}{{ session.libelle }}{% endblock %}
+{% block subtitle %}Planning des soutenances, membres de jury, salles, statuts et resultats.{% endblock %}
+
+{% block content %}
+<section class="grid stats">
+    <div class="stat"><span>Total affiche</span><strong>{{ stats.total }}</strong></div>
+    <div class="stat"><span>Planifiees</span><strong>{{ stats.planifiees }}</strong></div>
+    <div class="stat"><span>Validees</span><strong>{{ stats.validees }}</strong></div>
+    <div class="stat"><span>Terminees</span><strong>{{ stats.terminees }}</strong></div>
+</section>
+
+{% if message %}
+<div class="alert">{{ message }}</div>
+{% endif %}
+
+<section class="panel">
+    <div class="toolbar">
+        <form method="get" class="filters">
+            <label>
+                Recherche
+                <input type="search" name="q" value="{{ search_query }}" placeholder="Etudiant, memoire, salle...">
+            </label>
+            <label>
+                Statut
+                <select name="statut">
+                    <option value="">Tous les statuts</option>
+                    {% for value,label in statut_choices %}
+                    <option value="{{ value }}" {% if selected_statut == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button type="submit" class="btn">Filtrer</button>
+            <a href="{% url 'planning' session_id %}" class="btn secondary">Reinitialiser</a>
+        </form>
+        <div class="actions">
+            <a href="{% url 'index' %}" class="btn secondary">Retour</a>
+            {% if is_admin %}
+            <a href="{% url 'exporter_planning' session_id %}" class="btn secondary">Exporter CSV</a>
+            {% endif %}
+        </div>
+    </div>
 
     {% if planning %}
-    <table>
-        <thead>
-            <tr>
-                <th>Étudiant</th>
-                <th>Mémoire</th>
-                <th>Date</th>
-                <th>Heure</th>
-                <th>Salle</th>
-                <th>Jury</th>
-                <th>Statut</th>
-                <th>Note</th>
-                <th>Décision</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in planning %}
-            <tr>
-                <td>{{ item.soutenance.memoire.etudiant.prenom }} {{ item.soutenance.memoire.etudiant.nom }}</td>
-                <td>{{ item.soutenance.memoire.titre }}</td>
-                <td>{{ item.soutenance.jour|date:"d/m/Y" }}</td>
-                <td>{{ item.soutenance.heure_debut|time:"H:i" }}</td>
-                <td>{{ item.soutenance.salle.nom }}</td>
-                <td>
-                    <ul class="jury-list">
-                        {% for j in item.jurys %}
-                        <li>{{ j.enseignant.prenom }} {{ j.enseignant.nom }}</li>
-                        {% endfor %}
-                    </ul>
-                </td>
-                <td class="statut-{{ item.soutenance.statut }}">
-                    {{ item.soutenance.get_statut_display }}
-                </td>
-                <td class="note">
-                    {% if item.soutenance.note %}{{ item.soutenance.note }}/20{% else %}—{% endif %}
-                </td>
-                <td class="decision-{{ item.soutenance.decision }}">
-                    {% if item.soutenance.decision %}{{ item.soutenance.get_decision_display }}{% else %}—{% endif %}
-                </td>
-                <td>
-                    {% if item.soutenance.statut == 'planifiee' %}
-                        <a href="{% url 'valider_soutenance' item.soutenance.id %}" class="btn-valider">✅ Valider</a>
-                        <a href="{% url 'rejeter_soutenance' item.soutenance.id %}" class="btn-rejeter">❌ Rejeter</a>
-                    {% elif item.soutenance.statut == 'validee' and is_admin %}
-                        <a href="{% url 'saisir_resultats' item.soutenance.id %}" class="btn-valider">📝 Résultats</a>
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div class="empty">
-        <p>Aucune soutenance planifiée pour cette session.</p>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Etudiant</th>
+                    <th>Memoire</th>
+                    <th>Salle</th>
+                    <th>Jury</th>
+                    <th>Statut</th>
+                    <th>Resultat</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in planning %}
+                <tr>
+                    <td>
+                        <strong>{{ item.soutenance.jour|date:"d/m/Y" }}</strong><br>
+                        <span class="subtitle">{{ item.soutenance.heure_debut|time:"H:i" }} - {{ item.soutenance.heure_fin|time:"H:i" }}</span>
+                    </td>
+                    <td>
+                        <strong>{{ item.soutenance.memoire.etudiant.prenom }} {{ item.soutenance.memoire.etudiant.nom }}</strong><br>
+                        <span class="subtitle">{{ item.soutenance.memoire.etudiant.filiere }} - {{ item.soutenance.memoire.etudiant.niveau }}</span>
+                    </td>
+                    <td>
+                        <strong>{{ item.soutenance.memoire.titre }}</strong><br>
+                        <span class="subtitle">{{ item.soutenance.memoire.specialite }}</span>
+                    </td>
+                    <td>
+                        <span class="badge">{{ item.soutenance.salle.nom }}</span><br>
+                        <span class="subtitle">{{ item.soutenance.salle.batiment }}</span>
+                    </td>
+                    <td>
+                        <ul class="jury-list">
+                            {% for jury in item.jurys %}
+                            <li>{{ jury.enseignant.prenom }} {{ jury.enseignant.nom }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <span class="badge {% if item.soutenance.statut == 'terminee' %}ok{% elif item.soutenance.statut == 'rejetee' %}bad{% elif item.soutenance.statut == 'validee' %}ok{% else %}warn{% endif %}">
+                            {{ item.soutenance.get_statut_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if item.soutenance.note %}
+                        <strong>{{ item.soutenance.note }}/20</strong><br>
+                        <span class="subtitle">{{ item.soutenance.get_decision_display }}</span>
+                        {% else %}
+                        <span class="subtitle">Non saisi</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if is_admin and item.soutenance.statut == 'planifiee' %}
+                        <div class="actions">
+                            <form method="post" action="{% url 'valider_soutenance' item.soutenance.id %}">
+                                {% csrf_token %}
+                                <button class="btn success" type="submit">Valider</button>
+                            </form>
+                            <form method="post" action="{% url 'rejeter_soutenance' item.soutenance.id %}">
+                                {% csrf_token %}
+                                <button class="btn danger" type="submit">Rejeter</button>
+                            </form>
+                        </div>
+                        {% elif is_admin and item.soutenance.statut == 'validee' %}
+                        <a href="{% url 'saisir_resultats' item.soutenance.id %}" class="btn">Saisir resultats</a>
+                        {% else %}
+                        <span class="subtitle">Aucune action</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% else %}
+    <div class="empty">Aucune soutenance ne correspond aux criteres.</div>
     {% endif %}
-</body>
-</html>
+</section>
+{% endblock %}

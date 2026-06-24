@@ -1,0 +1,309 @@
+﻿{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | JuryPilot{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    :root {
+        --primary: #111827;
+        --secondary: #2563eb;
+        --accent: #2563eb;
+        --primary-fg: #ffffff;
+        --body-bg: #f4f7fb;
+        --body-fg: #172033;
+        --body-quiet-color: #68758a;
+        --body-loud-color: #111827;
+        --header-color: #ffffff;
+        --header-branding-color: #ffffff;
+        --header-bg: #111827;
+        --header-link-color: #cbd5e1;
+        --breadcrumbs-bg: #ffffff;
+        --breadcrumbs-fg: #68758a;
+        --breadcrumbs-link-fg: #2563eb;
+        --link-fg: #2563eb;
+        --link-hover-color: #1d4ed8;
+        --hairline-color: #dce3ee;
+        --border-color: #dce3ee;
+        --error-fg: #b91c1c;
+        --message-success-bg: #e9f8ef;
+        --message-warning-bg: #fff6df;
+        --message-error-bg: #fdecec;
+        --darkened-bg: #e8eef8;
+        --selected-bg: #e8f0ff;
+        --selected-row: #eef4ff;
+        --button-fg: #ffffff;
+        --button-bg: #2563eb;
+        --button-hover-bg: #1d4ed8;
+        --default-button-bg: #15803d;
+        --default-button-hover-bg: #166534;
+        --close-button-bg: #68758a;
+        --close-button-hover-bg: #475569;
+        color-scheme: light;
+    }
+
+    * { letter-spacing: 0; }
+
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f4f7fb;
+        color: #172033;
+    }
+
+    #container { background: #f4f7fb; }
+
+    #header {
+        min-height: 68px;
+        padding: 0 28px;
+        background: #111827;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    }
+
+    #branding h1,
+    #branding h1 a:link,
+    #branding h1 a:visited {
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.15rem;
+    }
+
+    #branding h1::before {
+        content: "JP";
+        display: inline-grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        margin-right: 12px;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 900;
+        vertical-align: middle;
+    }
+
+    #user-tools {
+        color: #cbd5e1;
+        font-size: 0.86rem;
+    }
+
+    #user-tools a,
+    #user-tools button {
+        color: #ffffff;
+        border-bottom: 0;
+        font-weight: 700;
+    }
+
+    div.breadcrumbs {
+        background: #ffffff;
+        color: #68758a;
+        border-bottom: 1px solid #dce3ee;
+        padding: 13px 28px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    }
+
+    div.breadcrumbs a { color: #2563eb; font-weight: 700; }
+
+    #content {
+        padding: 28px;
+    }
+
+    #content h1 {
+        margin: 0 0 20px;
+        color: #172033;
+        font-size: 2rem;
+        font-weight: 800;
+    }
+
+    .dashboard #content {
+        max-width: 1180px;
+    }
+
+    .module,
+    .inline-group,
+    .submit-row,
+    #changelist,
+    .paginator,
+    .object-tools a,
+    .messagelist li {
+        border-radius: 8px;
+    }
+
+    .module,
+    .inline-group,
+    #changelist {
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #dce3ee;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .module h2,
+    .module caption,
+    .inline-group h2 {
+        background: #f8fafc;
+        color: #475569;
+        border-bottom: 1px solid #dce3ee;
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .module table { border-collapse: collapse; }
+
+    th, td {
+        border-bottom: 1px solid #dce3ee;
+    }
+
+    thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+    }
+
+    tbody tr:hover { background: #eef4ff; }
+
+    a:link,
+    a:visited { color: #2563eb; }
+
+    a:hover { color: #1d4ed8; }
+
+    .object-tools {
+        display: flex;
+        gap: 8px;
+    }
+
+    .object-tools a,
+    .object-tools a:link,
+    .object-tools a:visited {
+        background: #2563eb;
+        color: #ffffff;
+        border-radius: 7px;
+        padding: 9px 13px;
+        font-weight: 800;
+    }
+
+    .object-tools a:hover { background: #1d4ed8; }
+
+    input[type="submit"],
+    button[type="submit"],
+    .submit-row input,
+    a.button,
+    .button {
+        border-radius: 7px;
+        border: 0;
+        background: #2563eb;
+        color: #ffffff;
+        font-weight: 800;
+        min-height: 36px;
+        padding: 9px 13px;
+    }
+
+    input[type="submit"]:hover,
+    button[type="submit"]:hover,
+    .submit-row input:hover,
+    a.button:hover,
+    .button:hover {
+        background: #1d4ed8;
+    }
+
+    .submit-row {
+        background: #ffffff;
+        border: 1px solid #dce3ee;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .submit-row input.default {
+        background: #15803d;
+    }
+
+    .submit-row input.default:hover {
+        background: #166534;
+    }
+
+    .deletelink,
+    .submit-row a.deletelink {
+        background: #b91c1c;
+        border-radius: 7px;
+    }
+
+    .deletelink:hover,
+    .submit-row a.deletelink:hover { background: #991b1b; }
+
+    input, select, textarea, .vTextField {
+        border: 1px solid #dce3ee;
+        border-radius: 7px;
+        padding: 9px 11px;
+        background: #ffffff;
+        color: #172033;
+        font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        outline: 0;
+    }
+
+    .form-row {
+        border-bottom: 1px solid #edf2f7;
+        padding: 13px 12px;
+    }
+
+    label,
+    .aligned label {
+        color: #475569;
+        font-weight: 800;
+    }
+
+    #changelist-filter {
+        background: #ffffff;
+        border-left: 1px solid #dce3ee;
+    }
+
+    #changelist-filter h2 {
+        background: #111827;
+        color: #ffffff;
+        font-weight: 800;
+    }
+
+    #toolbar {
+        background: #ffffff;
+        border: 1px solid #dce3ee;
+        border-radius: 8px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    #toolbar form input[type="submit"] {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .messagelist li {
+        border: 1px solid #dce3ee;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .app-auth.module,
+    .app-planification.module {
+        margin-bottom: 18px;
+    }
+
+    @media (max-width: 860px) {
+        #header { padding: 12px 18px; min-height: auto; }
+        #content { padding: 18px; }
+        div.breadcrumbs { padding: 12px 18px; }
+        #content h1 { font-size: 1.55rem; }
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">JuryPilot Administration</a></h1>
+{% endblock %}
+
+{% block nav-global %}
+<a href="{% url 'index' %}" style="color:#ffffff; font-weight:800; margin-left:18px; text-decoration:none;">Tableau de bord</a>
+{% endblock %}
